@@ -1,3 +1,7 @@
+## Custom Git Ignore rules
+data/
+
+## Git Ignore rules for Python
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

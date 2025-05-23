@@ -1,0 +1,22 @@
+[project]
+name = "lotr2-rl"
+version = "0.1.0"
+description = "RL implementation for the Ms-Dos game Lord of the Realm 2"
+readme = "README.md"
+requires-python = ">=3.11"
+
+dependencies = [
+    "gymnasium==1.1.1",
+    "numpy==1.26.4",
+    "pandas>=2.2.3",
+    "stable-baselines3==2.6.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[dependency-groups]
+dev = [
+    "ipykernel>=6.29.5",
+    "matplotlib>=3.10.3",
+]
