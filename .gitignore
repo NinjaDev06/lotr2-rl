@@ -1,5 +1,8 @@
 ## Custom Git Ignore rules
 data/
+roms/
+logs/
+logs/*
 
 ## Git Ignore rules for Python
 # Byte-compiled / optimized / DLL files

@@ -1,0 +1,40 @@
+# Initial load
+sleep 10
+
+# Skip Intro
+press_key 1
+sleep 0.1
+press_key 1
+sleep 0.1
+press_key 1
+sleep 0.1
+
+# Start New Game
+click 320 85
+sleep 0.1
+click 320 85
+sleep 0.1
+click 400 180
+sleep 0.1
+
+
+# Skip Intial Dialogue
+click 430 200
+sleep 0.1
+click 430 270
+sleep 0.1
+click 430 270
+sleep 0.1
+
+
+#move_mouse 200 20
+#sleep 1
+
+#move_mouse 85 270
+#sleep 1
+
+#move_mouse 600 270
+#sleep 1
+
+#move_mouse 300 395
+#sleep 1
