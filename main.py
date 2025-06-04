@@ -29,6 +29,10 @@ game_instance = None
 def parse_args():
     parser = argparse.ArgumentParser(description="Game Emulation and Evaluation with LLMs")
     
+    # Emulator selection (not necessary if config is specified)
+    parser.add_argument("--emulator", choices=["dos", "gym"],
+                       help="Which emulator to use ('dos' or 'gym'). Overwritten if config is specified.")
+
     # Common arguments
     parser.add_argument("--headless", action="store_true", 
                        help="Run the emulator without visual display")
@@ -135,15 +139,22 @@ def handle_shutdown_signal(sig, frame):
     
     sys.exit(0)
 
-async def main_async():
+def main():
     """Main async entry point."""
     args = parse_args()
     args = load_game_config(args)
 
     args.game = args.game or "lotr2"
 
-    from src.run_dos import run_dos_emulator
-    await run_dos_emulator(args)
+    if args.emulator == "dos":
+        from src.run_dos import run_dos_emulator
+        asyncio.run(run_dos_emulator(args))
+    elif args.emulator == "gym":
+        from src.run_gym import run_gym_emulator
+        run_gym_emulator(args)
+    else:
+        print("No emulator specified. Exiting.")
+        sys.exit(1)
 
 if __name__ == "__main__":
     # Register signal handlers for clean shutdown
@@ -152,6 +163,6 @@ if __name__ == "__main__":
     
     # Run the main function
     try:
-        asyncio.run(main_async())
+        main()
     except KeyboardInterrupt:
         print("\nProgram interrupted. Cleaning up...")

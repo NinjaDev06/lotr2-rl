@@ -2,16 +2,13 @@
 
 import http.server
 import socketserver
-import os
 import logging
 import threading
-import urllib.parse
 import asyncio
 from pathlib import Path
-from typing import Optional, Dict, Any
 import platform
 
-from playwright.async_api import async_playwright, Browser, BrowserContext, Page
+from playwright.async_api import async_playwright
 
 # Configure logging
 logging.basicConfig(

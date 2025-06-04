@@ -15,7 +15,7 @@ sleep 0.1
 click 320 85
 sleep 0.1
 click 400 180
-sleep 0.1
+sleep 0.5
 
 
 # Skip Intial Dialogue
