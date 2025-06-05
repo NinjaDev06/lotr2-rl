@@ -63,6 +63,10 @@ def parse_args():
     parser.add_argument("--step-delay", type=float, default=0.1, 
                        help="Delay between steps in seconds (GBA only)")
 
+    # Gym-specific arguments
+    parser.add_argument("--action-mode", choices=["random", "manual", "train", "enjoy"],
+                       help="Run the emulator without visual display")
+
     return parser.parse_args()
 
 def load_game_config(args):

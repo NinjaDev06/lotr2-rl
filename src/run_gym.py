@@ -13,8 +13,19 @@ def run_gym_emulator(args):
     env.reset()
     done = False
 
+    action_func = None
+    if args.action_mode == "random":
+        def random_action_func():
+            return env.action_space.sample()
+        action_func = random_action_func
+    elif args.action_mode == "manual":
+        def manual_actions():
+            action = input(f"Enter action (0-{env.action_space.n}): ")
+            return int(action) if action.isdigit() else 0
+        action_func = manual_actions
+
     while not done:
-        action = env.action_space.sample()
+        action = action_func()
         observation, reward, terminated, truncated, info = env.step(action)
         print(f"Action: {action}, Reward: {reward}, Info: {info}")
 
