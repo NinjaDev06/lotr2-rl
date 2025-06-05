@@ -119,6 +119,7 @@ class LordsOfTheRealm2Gym(gym.Env):
 
 
     def _play(self, action: int):
+        # print(f'Play action {action}')
         
         if action == 0:
             print('Wait action')
@@ -134,14 +135,17 @@ class LordsOfTheRealm2Gym(gym.Env):
             if mouse_action < 0 or mouse_action > self.mouse_action_space * 2:
                 raise ValueError(f'Action should be in range of action space [0, {self.mouse_action_space * 2}]')
 
+            # print(f'Play mouse action {mouse_action}')
             x = (mouse_action % self.mouse_action_space) % self.grid_width + 1
             y = (mouse_action % self.mouse_action_space) // self.grid_width + 1
+            # print(f'grid ({x}, {y})')
 
             self.current_x = x
             self.current_y = y
 
-            x_pixel = self.x_min + self.grid_to_pixel(x)
-            y_pixel = self.y_min + self.grid_to_pixel(y)
+            x_pixel = self.grid_to_pixel(x)
+            y_pixel = self.grid_to_pixel(y)
+            # print(f'pixel ({x_pixel}, {y_pixel})')
 
             if self._is_in_excluded_area(x_pixel, y_pixel):
                 print(f"Prevent moving inside excluded area: {x_pixel}, {y_pixel}")
@@ -151,7 +155,7 @@ class LordsOfTheRealm2Gym(gym.Env):
             self.current_y_pixel = y_pixel
 
             print(f'mouse_move {mouse_action} : move at grid=({x}, {y}), pixel=({x_pixel}, {y_pixel})')
-            self.browser.execute_action("move", f"{x_pixel},{y_pixel}")
+            self.browser.execute_action("move", f"{self.x_min + x_pixel},{self.y_min + y_pixel}")
             # time.sleep(self.sleep_second)
 
             # When they is no drag, directly perform a click after moving the mouse
