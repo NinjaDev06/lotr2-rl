@@ -4,6 +4,8 @@ import time
 import re
 import pytesseract
 import logging
+from datetime import datetime
+from pathlib import Path
 from typing import Any, Optional
 
 # from PIL import Image
@@ -38,6 +40,9 @@ class LordsOfTheRealm2Gym(gym.Env):
         # Observations are Box of RBG screen of 480 height and 640 width
         # height = 480
         # width = 640
+
+        self.log_dir = Path("logs") / "lotr2" / datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.log_dir.mkdir(parents=True, exist_ok=True)
 
         self.x_min = 85
         self.y_min = 20
@@ -89,11 +94,10 @@ class LordsOfTheRealm2Gym(gym.Env):
 
         # Decode image from array
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        cv2.imwrite("screenshot.png", img)  # Save for debugging
 
         cropped_img = img[:-75, 76:-90] 
 
-        cv2.imwrite("cropped_img.png", cropped_img)  # Save for debugging
+        cv2.imwrite(self.log_dir / "obs_1.png", cropped_img)  # Save for debugging
         return cropped_img
     
     def _get_info(self, observation: np.ndarray):
