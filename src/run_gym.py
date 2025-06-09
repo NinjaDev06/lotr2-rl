@@ -8,7 +8,7 @@ def run_gym_emulator(args):
     folderServer.start()
 
     # Parallel environments
-    env = gym.make("lotr2box/LordsOfTheRealm2-v0")
+    env = gym.make("lotr2box/LordsOfTheRealm2-v0", render_mode=args.render_mode,)
     
     env.reset()
     done = False

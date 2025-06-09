@@ -70,7 +70,7 @@ class LordsOfTheRealm2Gym(gym.Env):
         self.url = self.server.start("http://localhost:8080/lotr2.jsdos")
 
         self.browser = BrowserController(
-            headless=(render_mode == "humain")
+            headless=(render_mode != "human")
         )
         self.browser.start()
 
