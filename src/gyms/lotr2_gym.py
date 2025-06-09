@@ -3,6 +3,7 @@ import math
 import time
 import re
 import pytesseract
+import logging
 from typing import Any, Optional
 
 # from PIL import Image
@@ -14,6 +15,13 @@ import gymnasium as gym
 from src.emulators.dos.website_server import DOSGameServer
 from src.emulators.dos.browser_controller import BrowserController
 from src.llm.realtime_agent import WebBrowsingAgent
+
+# Configure logging
+logging.basicConfig(
+    level=logging.WARNING,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 
 class LordsOfTheRealm2Gym(gym.Env):
@@ -67,7 +75,7 @@ class LordsOfTheRealm2Gym(gym.Env):
         self.browser.start()
 
         icon_path = "C:\\Users\\egoul\\Documents\\Projects\\lotr2-rl\\src\\gyms\\player_icon.png"
-        print('icon found: ', os.path.exists(icon_path))
+        logger.info('icon found: ', os.path.exists(icon_path))
         self.player_icon_img = cv2.imread(icon_path)
 
     def _get_obs(self):
@@ -112,7 +120,7 @@ class LordsOfTheRealm2Gym(gym.Env):
 
         # Extract text
         text = pytesseract.image_to_string(crowns_image, lang="deu_latf")
-        print("Text found:", text)
+        logger.info("Text found:", text)
 
         crowns = None
         # Check if the text contains "rown" because the "C" is readed as "D"
@@ -120,7 +128,7 @@ class LordsOfTheRealm2Gym(gym.Env):
             text = text.replace("S", "5")
             crowns = int(re.sub(r'\D', '', text))  # Remove non-digit characters
         else:
-            print("No crowns found in the text.")
+            logger.warning("No crowns found in the text.")
         return crowns
 
     def reset(
@@ -158,7 +166,7 @@ class LordsOfTheRealm2Gym(gym.Env):
         reward = max(info["gold"] - self.last_gold, 0) # todo: build a reward function
 
         if reward > 0:
-            print(f"Gained Reward: {reward} (gold: {info['gold']} - last_gold: {self.last_gold})")
+            logger.info(f"Gained Reward: {reward} (gold: {info['gold']} - last_gold: {self.last_gold})")
 
         self.last_gold = info["gold"]
         return observation, reward, terminated, truncated, info
@@ -177,10 +185,10 @@ class LordsOfTheRealm2Gym(gym.Env):
             return True
 
     def _play(self, action: int):
-        # print(f'Play action {action}')
+        # logger.info(f'Play action {action}')
         
         if action == 0:
-            print('Wait action')
+            logger.info('Wait action')
             # Wait action
             return
 
@@ -193,26 +201,26 @@ class LordsOfTheRealm2Gym(gym.Env):
             if mouse_action < 0 or mouse_action > self.mouse_action_space * 2:
                 raise ValueError(f'Action should be in range of action space [0, {self.mouse_action_space * 2}]')
 
-            # print(f'Play mouse action {mouse_action}')
+            # logger.debug(f'Play mouse action {mouse_action}')
             x = (mouse_action % self.mouse_action_space) % self.grid_width + 1
             y = (mouse_action % self.mouse_action_space) // self.grid_width + 1
-            # print(f'grid ({x}, {y})')
+            # logger.debug(f'grid ({x}, {y})')
 
             self.current_x = x
             self.current_y = y
 
             x_pixel = self.grid_to_pixel(x)
             y_pixel = self.grid_to_pixel(y)
-            # print(f'pixel ({x_pixel}, {y_pixel})')
+            # logger.debug(f'pixel ({x_pixel}, {y_pixel})')
 
             if self._is_in_excluded_area(x_pixel, y_pixel):
-                print(f"Prevent moving inside excluded area: {x_pixel}, {y_pixel}")
+                logger.info(f"Prevent moving inside excluded area: {x_pixel}, {y_pixel}")
                 return
 
             self.current_x_pixel = x_pixel
             self.current_y_pixel = y_pixel
 
-            print(f'mouse_move {mouse_action} : move at grid=({x}, {y}), pixel=({x_pixel}, {y_pixel})')
+            logger.info(f'mouse_move {mouse_action} : move at grid=({x}, {y}), pixel=({x_pixel}, {y_pixel})')
             self.browser.execute_action("move", f"{self.x_min + x_pixel},{self.y_min + y_pixel}")
             # time.sleep(self.sleep_second)
 
@@ -276,14 +284,14 @@ class LordsOfTheRealm2Gym(gym.Env):
         # logger.info(f"area: ({x}, {y}) excluded: ({(x >= self.game_width - 126)}, {(134 <= y)})")
         # Exclude minimap area
         if x >= self.game_width - 126 and y <= 114:
-            print(f"Move inside exluded area: {x}, {y}")
+            logger.info(f"Move inside exluded area: {x}, {y}")
             return True
         
         # logger.info(f"area: ({x}, {y}) excluded: ({self.game_width - 136}, {self.game_height - 35}, {self.game_height - 10})")
         # logger.info(f"area: ({x}, {y}) excluded: ({(x >= self.game_width - 136)}, {(y >= self.game_height - 35)}, {y <= self.game_height - 10})")
         # Exclude bottom menu area, but not the "end turn" button
         if x >= self.game_width - 126 and y >= self.game_height - 30 and y <= self.game_height - 14:
-            print(f"Move inside exluded area: {x}, {y}")
+            logger.info(f"Move inside exluded area: {x}, {y}")
             return True
         return False
 

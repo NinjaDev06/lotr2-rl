@@ -13,7 +13,7 @@ from playwright.sync_api import sync_playwright, Browser, BrowserContext, Page
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.WARNING,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
@@ -63,30 +63,30 @@ class BrowserController:
                 if command == "sleep":
                     seconds = float(parts[1])
                     time.sleep(seconds)
-                    print(f"Waited for {seconds} seconds")
+                    logger.info(f"Waited for {seconds} seconds")
                     
                 elif command == "move_mouse":
                     x, y = float(parts[1]), float(parts[2])
                     self.move_mouse(x, y)
-                    print(f"Moved mouse to ({x}, {y})")
+                    logger.info(f"Moved mouse to ({x}, {y})")
                     
                 elif command == "click":
                     x, y = float(parts[1]), float(parts[2])
                     self.click(x, y)
-                    print(f"Clicked at ({x}, {y})")
+                    logger.info(f"Clicked at ({x}, {y})")
                     
                 elif command == "press_key":
                     key = parts[1]
                     self.press_key(key)
-                    print(f"Pressed key: {key}")
+                    logger.info(f"Pressed key: {key}")
                     
                 else:
-                    print(f"Unknown command: {command}")
+                    logger.info(f"Unknown command: {command}")
                     
         except FileNotFoundError:
-            print(f"Warning: No preload configuration found at {config_path}")
+            logger.warning(f"Warning: No preload configuration found at {config_path}")
         except Exception as e:
-            print(f"Error executing preload actions: {e}")
+            logger.error(f"Error executing preload actions: {e}")
 
     def start(self) -> None:
         """
@@ -96,7 +96,6 @@ class BrowserController:
         self.browser = self.playwright.chromium.launch(headless=self.headless, args=["--disable-web-security"])
 
         self.viewport_dimensions = {"width": 640, "height": 400} if platform.system() == "Darwin" else {"width": 700, "height": 475}
-        print('viewport_dimensions', self.viewport_dimensions)
         self.context = self.browser.new_context(
             viewport=self.viewport_dimensions,
             user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
