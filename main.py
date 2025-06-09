@@ -149,6 +149,7 @@ def main():
     args = load_game_config(args)
 
     args.game = args.game or "lotr2"
+    args.action_mode = args.action_mode or "random"
 
     if args.emulator == "dos":
         from src.run_dos import run_dos_emulator

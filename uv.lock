@@ -1218,6 +1218,7 @@ dependencies = [
     { name = "pyboy" },
     { name = "pydantic" },
     { name = "pygame" },
+    { name = "pytesseract" },
     { name = "pytest" },
     { name = "python-dotenv" },
     { name = "rich" },
@@ -1246,6 +1247,7 @@ requires-dist = [
     { name = "pyboy", specifier = ">=2.5.1" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pygame", specifier = ">=2.1.0" },
+    { name = "pytesseract", specifier = ">=0.3.13" },
     { name = "pytest", specifier = ">=7.0.0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "rich", specifier = ">=13.0.0" },
@@ -2090,6 +2092,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/80/11/9bee58ff7aa742e7917d97a926ff3d1c2e9a67ac2e82244c4c50c51e3df8/pysdl2_dll-2.32.0-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:490f1525c47ab00d8150ed1245fb306f02628d1b43f0e162e6903ed5c1a4a1ef", size = 5176310, upload-time = "2025-03-20T20:59:43.748Z" },
     { url = "https://files.pythonhosted.org/packages/2e/9c/f09d804737501b4813b3612c95e4d74dcbc0c82a51a74542ed8e5a4a27b0/pysdl2_dll-2.32.0-py2.py3-none-win32.whl", hash = "sha256:0139ce2160d8387fa4f9bbd5272b374be521e9dd133cd9a2d76c20a20d599bed", size = 3405412, upload-time = "2025-03-20T20:51:54.036Z" },
     { url = "https://files.pythonhosted.org/packages/47/ef/5ba6580e06aec8f1e3004269a6939457e63e4791ca1e36ab2e3492a120da/pysdl2_dll-2.32.0-py2.py3-none-win_amd64.whl", hash = "sha256:28f577907bf17df3b3600daebbf0534aeaa44af266430ba09c7e04ab3e22b41f", size = 4042963, upload-time = "2025-03-20T20:52:34.372Z" },
+]
+
+[[package]]
+name = "pytesseract"
+version = "0.3.13"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+    { name = "pillow" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9f/a6/7d679b83c285974a7cb94d739b461fa7e7a9b17a3abfd7bf6cbc5c2394b0/pytesseract-0.3.13.tar.gz", hash = "sha256:4bf5f880c99406f52a3cfc2633e42d9dc67615e69d8a509d74867d3baddb5db9", size = 17689, upload-time = "2024-08-16T02:33:56.762Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7a/33/8312d7ce74670c9d39a532b2c246a853861120486be9443eebf048043637/pytesseract-0.3.13-py3-none-any.whl", hash = "sha256:7a99c6c2ac598360693d83a416e36e0b33a67638bb9d77fdcac094a3589d4b34", size = 14705, upload-time = "2024-08-16T02:36:10.09Z" },
 ]
 
 [[package]]

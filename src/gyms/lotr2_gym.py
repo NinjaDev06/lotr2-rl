@@ -1,5 +1,8 @@
+import os
 import math
 import time
+import re
+import pytesseract
 from typing import Any, Optional
 
 # from PIL import Image
@@ -63,6 +66,10 @@ class LordsOfTheRealm2Gym(gym.Env):
         )
         self.browser.start()
 
+        icon_path = "C:\\Users\\egoul\\Documents\\Projects\\lotr2-rl\\src\\gyms\\player_icon.png"
+        print('icon found: ', os.path.exists(icon_path))
+        self.player_icon_img = cv2.imread(icon_path)
+
     def _get_obs(self):
         image_bytes = self.browser.get_screenshot()
         # img = Image.frombytes('RGB', (640, 400), image_bytes)
@@ -74,17 +81,48 @@ class LordsOfTheRealm2Gym(gym.Env):
 
         # Decode image from array
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        cv2.imwrite("screenshot.png", img)  # Save for debugging
 
-        cropped_img = img[self.x_min:self.x_min + self.game_width, self.y_min:self.y_min + self.game_height] 
+        cropped_img = img[:-75, 76:-90] 
 
+        cv2.imwrite("cropped_img.png", cropped_img)  # Save for debugging
         return cropped_img
-        
-    def _get_info(self):
+    
+    def _get_info(self, observation: np.ndarray):
+        crowns = self._get_crown(observation)
         return {
             # todo: read resource values in Dosbox memory
-            "gold": 0, # self.client.get_cash()
+            "gold": crowns if crowns is not None else self.last_gold,
         }
     
+    def _get_crown(self, image: np.ndarray) -> int:
+        """
+        Extract the number of crowns from the image.
+        
+        Args:
+            image: The image containing the crowns.
+            
+        Returns:
+            The number of crowns as an integer.
+        """
+        # Define the region of interest (ROI) for the crowns
+        x = 415
+        width = 105
+        crowns_image = image[0:19, x:x+width] 
+
+        # Extract text
+        text = pytesseract.image_to_string(crowns_image, lang="deu_latf")
+        print("Text found:", text)
+
+        crowns = None
+        # Check if the text contains "rown" because the "C" is readed as "D"
+        if "rown" in text:
+            text = text.replace("S", "5")
+            crowns = int(re.sub(r'\D', '', text))  # Remove non-digit characters
+        else:
+            print("No crowns found in the text.")
+        return crowns
+
     def reset(
         self, *, seed: int | None = None, options: dict[str, Any] | None = None
     ):
@@ -96,7 +134,7 @@ class LordsOfTheRealm2Gym(gym.Env):
         self.browser.pre_load(self.game)
 
         observation = self._get_obs()
-        info = self._get_info()
+        info = self._get_info(observation)
         self.last_gold = info["gold"]
         self.nb_step = 0
 
@@ -108,15 +146,35 @@ class LordsOfTheRealm2Gym(gym.Env):
         self.nb_step += 1
 
         observation = self._get_obs()
-        info = self._get_info()
+        is_end_turn = self._is_end_turn_animation(observation)
+        while is_end_turn:
+            time.sleep(1)
+            observation = self._get_obs()
+            is_end_turn = self._is_end_turn_animation(observation)
+        info = self._get_info(observation)
 
         terminated = False # todo: get if game is winned or losted
         truncated = True if self.nb_step >= self.nb_step_reset else False # todo: do we want to setup a time limit for episode training?
         reward = max(info["gold"] - self.last_gold, 0) # todo: build a reward function
 
+        if reward > 0:
+            print(f"Gained Reward: {reward} (gold: {info['gold']} - last_gold: {self.last_gold})")
+
         self.last_gold = info["gold"]
         return observation, reward, terminated, truncated, info
 
+    def _is_end_turn_animation(self, observation) -> bool:
+        result = cv2.matchTemplate(observation, self.player_icon_img, cv2.TM_CCOEFF_NORMED)
+
+        # Set a threshold: 0.8+ is usually a strong match
+        threshold = 0.8
+        locations = np.where(result >= threshold)
+
+        # Check if any match was found
+        if len(list(zip(*locations[::-1]))) > 0:
+            return False
+        else:
+            return True
 
     def _play(self, action: int):
         # print(f'Play action {action}')
