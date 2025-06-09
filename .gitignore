@@ -3,6 +3,7 @@ data/
 roms/
 logs/
 logs/*
+experiments/
 
 ## Git Ignore rules for Python
 # Byte-compiled / optimized / DLL files
