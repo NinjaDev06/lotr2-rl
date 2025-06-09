@@ -26,15 +26,21 @@ sleep 0.1
 click 430 270
 sleep 0.1
 
+# Increase Taxe by 1%
+click 505 185
+sleep 0.1
+click 245 145
+sleep 0.1
+click 400 230
+sleep 0.1
 
+
+## Test game bounding
 #move_mouse 200 20
 #sleep 1
-
 #move_mouse 85 270
 #sleep 1
-
 #move_mouse 600 270
 #sleep 1
-
 #move_mouse 300 395
 #sleep 1
