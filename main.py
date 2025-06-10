@@ -66,7 +66,7 @@ def parse_args():
     # Gym-specific arguments
     parser.add_argument("--action-mode", choices=["random", "manual", "train", "enjoy"],
                        help="Run the emulator without visual display")
-    parser.add_argument("--render-mode", choices=["rgb", "human"], default="rgb",
+    parser.add_argument("--render-mode", choices=["rgb_array", "human"], default="rgb_array",
                        help="Run the emulator without visual display")
 
     return parser.parse_args()
