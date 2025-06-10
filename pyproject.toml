@@ -28,6 +28,7 @@ dependencies = [
     # For GUI
     "sv_ttk",
     "pytesseract>=0.3.13",
+    "stable-baselines3>=2.6.0",
 ]
 
 [tool.setuptools]

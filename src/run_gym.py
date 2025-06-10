@@ -1,12 +1,30 @@
 import gymnasium as gym
 
+from stable_baselines3 import PPO
+from stable_baselines3.common.env_util import make_vec_env
+
 from src.folder_web_server import FolderWebServer
 from src.gyms.lotr2_gym import LordsOfTheRealm2Gym
 
-def run_gym_emulator(args):
-    folderServer = FolderWebServer('./roms', port=8080)
-    folderServer.start()
+def _train_lotr2_gym(args):
+    env = make_vec_env("lotr2-rl/LordsOfTheRealm2-v0", n_envs=1, env_kwargs={"render_mode": args.render_mode})
+    
+    model = PPO("MlpPolicy", env, verbose=1)
+    model.learn(total_timesteps=5000)
+    
+    obs = env.reset()
+    done = False
+    
+    while not done:
+        action, _states = model.predict(obs)
+        obs, rewards, done, info = env.step(action)
+        print(f"Action: {action}, Reward: {rewards}, Info: {info}")
+    
+    model.save("lotr2_ppo_model")
 
+    env.close()
+
+def _test_lotr2_gym(args):
     # Parallel environments
     env = gym.make("lotr2-rl/LordsOfTheRealm2-v0", render_mode=args.render_mode,)
     
@@ -32,4 +50,14 @@ def run_gym_emulator(args):
         done = terminated or truncated
 
     env.close()
+
+def run_gym_emulator(args):
+    folderServer = FolderWebServer('./roms', port=8080)
+    folderServer.start()
+
+    if args.action_mode == "train":
+        _train_lotr2_gym(args)
+    else:
+        _test_lotr2_gym(args)
+
     folderServer.stop()
