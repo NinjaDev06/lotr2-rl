@@ -210,7 +210,7 @@ class BrowserController:
         self.move_mouse(x, y)
         
         # Add a small delay before clicking (like a human would)
-        asyncio.sleep(random.uniform(0.1, 0.3))
+        time.sleep(random.uniform(0.1, 0.3))
         
         # Apply click options
         # if options:
