@@ -46,7 +46,6 @@ class LordsOfTheRealm2Gym(gym.Env):
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
         self.observation_space = gym.spaces.Box(0, 255, shape=(400, 534, 3), dtype=np.uint8)
-        print(f"Observation space shape: {self.observation_space.shape}")
 
         self.x_min = 85
         self.y_min = 20
@@ -98,7 +97,6 @@ class LordsOfTheRealm2Gym(gym.Env):
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
         cropped_img = img[:-75, 76:-90] 
-        print(f"Image shape: {cropped_img.shape}")
 
         cv2.imwrite(self.log_dir / "obs_1.png", cropped_img)  # Save for debugging
         return cropped_img
