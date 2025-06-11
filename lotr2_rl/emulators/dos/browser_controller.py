@@ -179,7 +179,7 @@ class BrowserController:
         for point_x, point_y in path:
             self.page.mouse.move(point_x, point_y)
             # Add a small delay to simulate human movement speed
-            time.sleep(random.uniform(0.001, 0.005))
+            time.sleep(0.001)
         
         # Update current mouse position
         self.current_mouse_position = (x, y)
@@ -223,7 +223,7 @@ class BrowserController:
         self.move_mouse(x, y)
         
         # Add a small delay before clicking (like a human would)
-        time.sleep(random.uniform(0.1, 0.3))
+        time.sleep(0.1)
         
         # Apply click options
         # if options:
@@ -232,7 +232,7 @@ class BrowserController:
         #     await self.page.mouse.click(x, y)
 
         self.page.mouse.down()
-        time.sleep(random.uniform(0.05, 0.1))
+        time.sleep(0.05)
         self.page.mouse.up()
         
         logger.info(f"Clicked at ({x}, {y}) with options: {options}")
