@@ -6,10 +6,10 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional, Any
-from src.utils import is_same_image
+from lotr2_rl.utils import is_same_image
 
-from src.emulators.dos.browser_controller import BrowserController
-from src.llm.fake_llm_client import FakeLLMClient
+from lotr2_rl.emulators.dos.browser_controller import BrowserController
+from lotr2_rl.llm.fake_llm_client import FakeLLMClient
 
 # Configure logging
 logging.basicConfig(

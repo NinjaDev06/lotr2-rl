@@ -10,7 +10,7 @@ import time
 from typing import Optional, Dict, Any
 from PIL import Image
 from pathlib import Path
-from src.utils import hash_image
+from lotr2_rl.utils import hash_image
 
 # Add project root to path
 project_root = Path(__file__).parent
@@ -154,10 +154,10 @@ def main():
     args.action_mode = args.action_mode or "random"
 
     if args.emulator == "dos":
-        from src.run_dos import run_dos_emulator
+        from lotr2_rl.run_dos import run_dos_emulator
         asyncio.run(run_dos_emulator(args))
     elif args.emulator == "gym":
-        from src.run_gym import run_gym_emulator
+        from lotr2_rl.run_gym import run_gym_emulator
         run_gym_emulator(args)
     else:
         print("No emulator specified. Exiting.")

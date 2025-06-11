@@ -56,6 +56,7 @@ class DOSGameServer:
         handler = self._create_request_handler(game_url, custom_html, self.lite_mode)
         
         # Create and start the server
+        print(f"Starting server on port {self.port}...")
         self.server = socketserver.TCPServer(("", self.port), handler)
         self.is_running = True
         
@@ -163,7 +164,7 @@ class DOSGameServer:
                     self.end_headers()
                     
                     # Create the HTML content with the specified game URL
-                    from src.consts import DOS_GAME_HTML_TEMPLATE, DOS_GAME_LITE_HTML_TEMPLATE
+                    from lotr2_rl.consts import DOS_GAME_HTML_TEMPLATE, DOS_GAME_LITE_HTML_TEMPLATE
 
                     if custom_html:
                         html_content = custom_html

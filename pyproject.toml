@@ -29,10 +29,11 @@ dependencies = [
     "sv_ttk",
     "pytesseract>=0.3.13",
     "stable-baselines3>=2.6.0",
+    "rl-zoo3>=2.6.0",
 ]
 
 [tool.setuptools]
-package-dir = {"" = "src"}
+package-dir = {"" = "lotr2_rl"}
 
 [dependency-groups]
 dev = [
