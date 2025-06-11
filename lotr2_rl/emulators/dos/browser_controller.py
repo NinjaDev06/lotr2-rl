@@ -40,6 +40,16 @@ class BrowserController:
         self.pause_task = None  # Add this to track the pause task
         self.lite = False  # Whether to run in lite mode
     
+    @property
+    def is_running(self) -> bool:
+        """
+        Check if the browser is currently running.
+        
+        Returns:
+            True if the browser is running, False otherwise
+        """
+        return self.browser is not None and self.page is not None and not self.paused
+
     def pre_load(self, game: str) -> None:
         """
         Read and execute preload actions from a config file for the specified game.
@@ -159,6 +169,9 @@ class BrowserController:
         # Get current mouse position
         start_x, start_y = self.current_mouse_position
         
+        # if start_x == x and start_y == y:
+        #     return  # No movement needed
+
         # Generate a human-like path for the mouse movement
         path = self._generate_human_like_path(start_x, start_y, x, y)
         
