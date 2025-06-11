@@ -3,8 +3,8 @@ import gymnasium as gym
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
 
-from src.folder_web_server import FolderWebServer
-from src.gyms.lotr2_gym import LordsOfTheRealm2Gym
+from lotr2_rl.folder_web_server import FolderWebServer
+from lotr2_rl.gyms.lotr2_gym import LordsOfTheRealm2Gym
 
 def _train_lotr2_gym(args):
     env = make_vec_env("lotr2-rl/LordsOfTheRealm2-v0", n_envs=1, env_kwargs={"render_mode": args.render_mode})

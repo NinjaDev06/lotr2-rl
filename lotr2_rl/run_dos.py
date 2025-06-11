@@ -9,10 +9,10 @@ async def run_dos_emulator(args):
     # WebBrowsingAgent, GAME_URL_MAP, DOSGameServer, DOSEvaluator = import_dos_modules()
     
     try:
-        from src.llm.realtime_agent import WebBrowsingAgent
-        from src.consts import GAME_URL_MAP
-        from src.emulators.dos.website_server import DOSGameServer
-        from src.evaluator import DOSEvaluator
+        from lotr2_rl.llm.realtime_agent import WebBrowsingAgent
+        from lotr2_rl.consts import GAME_URL_MAP
+        from lotr2_rl.emulators.dos.website_server import DOSGameServer
+        from lotr2_rl.evaluator import DOSEvaluator
     except ImportError as e:
         print(f"Error importing DOS modules: {e}")
         print("Make sure you have installed the required dependencies for DOS emulation.")

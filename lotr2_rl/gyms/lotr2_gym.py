@@ -14,9 +14,9 @@ import numpy as np
 import cv2
 import gymnasium as gym
 
-from src.emulators.dos.website_server import DOSGameServer
-from src.emulators.dos.browser_controller import BrowserController
-from src.llm.realtime_agent import WebBrowsingAgent
+from lotr2_rl.emulators.dos.website_server import DOSGameServer
+from lotr2_rl.emulators.dos.browser_controller import BrowserController
+from lotr2_rl.llm.realtime_agent import WebBrowsingAgent
 
 # Configure logging
 logging.basicConfig(
@@ -25,6 +25,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+_next_port = 9000
+def _get_next_port():
+    global _next_port
+    port = _next_port
+    _next_port += 1
+    return port
 
 class LordsOfTheRealm2Gym(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 24}
@@ -72,7 +78,7 @@ class LordsOfTheRealm2Gym(gym.Env):
         self.nb_step = 0
 
         self.game = "lotr2"
-        self.server = DOSGameServer(9000, lite=False)
+        self.server = DOSGameServer(_get_next_port(), lite=False)
         self.url = self.server.start("http://localhost:8080/lotr2.jsdos")
 
         self.browser = BrowserController(
@@ -80,7 +86,7 @@ class LordsOfTheRealm2Gym(gym.Env):
         )
         self.browser.start()
 
-        icon_path = "C:\\Users\\egoul\\Documents\\Projects\\lotr2-rl\\src\\gyms\\player_icon.png"
+        icon_path = "C:\\Users\\egoul\\Documents\\Projects\\lotr2-rl\\lotr2_rl\\gyms\\player_icon.png"
         logger.info('icon found: ', os.path.exists(icon_path))
         self.player_icon_img = cv2.imread(icon_path)
 
@@ -299,8 +305,3 @@ class LordsOfTheRealm2Gym(gym.Env):
             logger.info(f"Move inside exluded area: {x}, {y}")
             return True
         return False
-
-gym.register(
-    id="lotr2-rl/LordsOfTheRealm2-v0",
-    entry_point=LordsOfTheRealm2Gym,
-)

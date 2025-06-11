@@ -4,8 +4,8 @@
 import asyncio
 from typing import Dict, Any, Optional, List, Callable
 from abc import ABC, abstractmethod
-from src.llm.realtime_agent import WebBrowsingAgent
-from src.emulators.dos.website_server import DOSGameServer
+from lotr2_rl.llm.realtime_agent import WebBrowsingAgent
+from lotr2_rl.emulators.dos.website_server import DOSGameServer
 
 class BaseVGBenchEvaluator(ABC):
     """Abstract base class for evaluators that coordinate between game emulators and LLMs."""
