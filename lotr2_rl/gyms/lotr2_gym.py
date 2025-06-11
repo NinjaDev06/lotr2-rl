@@ -80,11 +80,10 @@ class LordsOfTheRealm2Gym(gym.Env):
         self.game = "lotr2"
         self.server = DOSGameServer(_get_next_port(), lite=False)
         self.url = self.server.start("http://localhost:8080/lotr2.jsdos")
-
+        
         self.browser = BrowserController(
             headless=(render_mode != "human")
         )
-        self.browser.start()
 
         icon_path = "C:\\Users\\egoul\\Documents\\Projects\\lotr2-rl\\lotr2_rl\\gyms\\player_icon.png"
         logger.info('icon found: ', os.path.exists(icon_path))
@@ -104,7 +103,7 @@ class LordsOfTheRealm2Gym(gym.Env):
 
         cropped_img = img[:-75, 76:-90] 
 
-        cv2.imwrite(self.log_dir / "obs_1.png", cropped_img)  # Save for debugging
+        cv2.imwrite(self.log_dir / f"obs_{self.server.port}.png", cropped_img)  # Save for debugging
         return cropped_img
     
     def _get_info(self, observation: np.ndarray):
@@ -148,6 +147,9 @@ class LordsOfTheRealm2Gym(gym.Env):
         # We need the following line to seed self.np_random
         super().reset(seed=seed)
         
+        if not self.browser.is_running:
+            self.browser.start()
+
         # Navigate to the initial URL
         self.browser.navigate(self.url)
         self.browser.pre_load(self.game)
