@@ -111,8 +111,8 @@ class LordsOfTheRealm2Gym(gym.Env):
         self.invalid_crown_texts = []
         self.end_of_turn_count = 0
 
-    def _get_obs(self):
-        image_bytes = self.browser.get_screenshot()
+    async def _get_obs(self):
+        image_bytes = await self.browser.get_screenshot()
         # img = Image.frombytes('RGB', (640, 400), image_bytes)
         # img = Image.frombytes('RGB', (self.browser.viewport_dimensions['width'], self.browser.viewport_dimensions['height']), image_bytes)
         # img = img.crop((self.x_min, self.y_min, self.x_min + self.game_width, self.y_min + self.game_height))
@@ -193,39 +193,39 @@ class LordsOfTheRealm2Gym(gym.Env):
         #         self.invalid_crown_texts.append(text)
         return crowns
 
-    def reset(
+    async def reset(
         self, *, seed: int | None = None, options: dict[str, Any] | None = None
     ):
         # We need the following line to seed self.np_random
         super().reset(seed=seed)
         
         if not self.browser.is_running:
-            self.browser.start()
+            await self.browser.start()
 
         # Navigate to the initial URL
-        self.browser.navigate(self.url)
-        self.browser.pre_load(self.game)
+        await self.browser.navigate(self.url)
+        await self.browser.pre_load(self.game)
 
-        observation = self._get_obs()
+        observation = await self._get_obs()
         info = self._get_info(observation)
         self.last_gold = info["gold"]
         self.nb_step = 0
 
         return observation, info
     
-    def step(self, action):
+    async def step(self, action):
         # todo: apply the action into Dosbox emulator
-        self._play(action)
+        await self._play(action)
         self.nb_step += 1
 
-        observation = self._get_obs()
+        observation = await self._get_obs()
         is_end_turn = self._is_end_turn_animation(observation)
         # s_full_screen_menu = self._is_full_screen_menu(observation)
         wait_count = 0
         while is_end_turn and wait_count < 5:
             time.sleep(1)
             wait_count += 1
-            observation = self._get_obs()
+            observation = await self._get_obs()
             is_end_turn = self._is_end_turn_animation(observation)
             # s_full_screen_menu = self._is_full_screen_menu(observation)
         if wait_count >= 5:
@@ -267,7 +267,7 @@ class LordsOfTheRealm2Gym(gym.Env):
         locations = search_image(observation, self.confirm_button_img)
         return any([loc for loc in locations if loc.x == 521 and loc.y == 386])
 
-    def _play(self, action: int):
+    async def _play(self, action: int):
         # logger.info(f'Play action {action}')
         
         if action == 0:
@@ -307,13 +307,13 @@ class LordsOfTheRealm2Gym(gym.Env):
             y_pixel += self.y_min
 
             logger.info(f'mouse_move {mouse_action} : move at grid=({x}, {y}), pixel=({x_pixel}, {y_pixel})')
-            self.browser.execute_action("move", f"{x_pixel},{y_pixel}")
+            await self.browser.execute_action("move", f"{x_pixel},{y_pixel}")
             # time.sleep(self.sleep_second)
 
             # When they is no drag, directly perform a click after moving the mouse
             # This remove the learning of action chain of mouve + press + release to click on a game button
             if not self.enable_drag:
-                self.browser.execute_action("click", "")
+                await self.browser.execute_action("click", "")
 
             
     # def _play_mouse_button(self, button: MouseButtonAction):

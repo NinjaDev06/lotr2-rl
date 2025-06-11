@@ -9,7 +9,7 @@ import time
 from typing import List, Optional, Tuple, Union
 import platform
 
-from playwright.sync_api import sync_playwright, Browser, BrowserContext, Page
+from playwright.async_api import async_playwright, Browser, BrowserContext, Page
 
 # Configure logging
 logging.basicConfig(
@@ -49,8 +49,8 @@ class BrowserController:
             True if the browser is running, False otherwise
         """
         return self.browser is not None and self.page is not None and not self.paused
-
-    def pre_load(self, game: str) -> None:
+    
+    async def pre_load(self, game: str) -> None:
         """
         Read and execute preload actions from a config file for the specified game.
         
@@ -72,22 +72,22 @@ class BrowserController:
                 
                 if command == "sleep":
                     seconds = float(parts[1])
-                    time.sleep(seconds)
+                    await asyncio.sleep(seconds)
                     logger.info(f"Waited for {seconds} seconds")
                     
                 elif command == "move_mouse":
                     x, y = float(parts[1]), float(parts[2])
-                    self.move_mouse(x, y)
+                    await self.move_mouse(x, y)
                     logger.info(f"Moved mouse to ({x}, {y})")
                     
                 elif command == "click":
                     x, y = float(parts[1]), float(parts[2])
-                    self.click(x, y)
+                    await self.click(x, y)
                     logger.info(f"Clicked at ({x}, {y})")
                     
                 elif command == "press_key":
                     key = parts[1]
-                    self.press_key(key)
+                    await self.press_key(key)
                     logger.info(f"Pressed key: {key}")
                     
                 else:
@@ -98,36 +98,36 @@ class BrowserController:
         except Exception as e:
             logger.error(f"Error executing preload actions: {e}")
 
-    def start(self) -> None:
+    async def start(self) -> None:
         """
         Start the browser.
         """
-        self.playwright = sync_playwright().start()
-        self.browser = self.playwright.chromium.launch(headless=self.headless, args=["--disable-web-security"])
+        self.playwright = await async_playwright().start()
+        self.browser = await self.playwright.chromium.launch(headless=self.headless, args=["--disable-web-security"])
 
         self.viewport_dimensions = {"width": 640, "height": 400} if platform.system() == "Darwin" else {"width": 700, "height": 475}
-        self.context = self.browser.new_context(
+        self.context = await self.browser.new_context(
             viewport=self.viewport_dimensions,
             user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
         )
-        self.page = self.context.new_page()
+        self.page = await self.context.new_page()
         
         # Set initial mouse position
         self.current_mouse_position = (0, 0)
         
         logger.info("Browser started successfully")
         
-    def close(self) -> None:
+    async def close(self) -> None:
         """
         Close the browser.
         """
         if self.browser:
-            self.browser.close()
+            await self.browser.close()
         if self.playwright:
-            self.playwright.stop()
+            await self.playwright.stop()
         logger.info("Browser closed successfully")
         
-    def navigate(self, url: str) -> None:
+    async def navigate(self, url: str) -> None:
         """
         Navigate to a URL.
         
@@ -137,10 +137,10 @@ class BrowserController:
         if not self.page:
             raise ValueError("Browser not started")
         
-        self.page.goto(url)
+        await self.page.goto(url)
         logger.info(f"Navigated to {url}")
         
-    def get_screenshot(self) -> bytes:
+    async def get_screenshot(self) -> bytes:
         """
         Get a screenshot of the current page.
         
@@ -151,11 +151,11 @@ class BrowserController:
             raise ValueError("Browser not started")
         
         # Capture screenshot in JPEG format
-        screenshot = self.page.screenshot(type="jpeg", quality=100)
+        screenshot = await self.page.screenshot(type="jpeg", quality=100)
         logger.info("Screenshot captured")
         return screenshot
         
-    def move_mouse(self, x: float, y: float) -> None:
+    async def move_mouse(self, x: float, y: float) -> None:
         """
         Move the mouse to the specified coordinates with human-like movement.
         
@@ -177,35 +177,15 @@ class BrowserController:
         
         # Move the mouse along the path
         for point_x, point_y in path:
-            self.page.mouse.move(point_x, point_y)
+            await self.page.mouse.move(point_x, point_y)
             # Add a small delay to simulate human movement speed
-            time.sleep(0.001)
+            await asyncio.sleep(random.uniform(0.001, 0.005))
         
         # Update current mouse position
         self.current_mouse_position = (x, y)
         logger.info(f"Mouse moved to ({x}, {y})")
 
-    def move_mouse_right(self) -> None:
-        """Move the mouse 10 pixels to the right."""
-        x, y = self.current_mouse_position
-        self.move_mouse(x + 10, y)
-
-    def move_mouse_left(self) -> None:
-        """Move the mouse 10 pixels to the left."""
-        x, y = self.current_mouse_position
-        self.move_mouse(x - 10, y)
-
-    def move_mouse_up(self) -> None:
-        """Move the mouse 10 pixels up."""
-        x, y = self.current_mouse_position
-        self.move_mouse(x, y - 10)
-
-    def move_mouse_down(self) -> None:
-        """Move the mouse 10 pixels down."""
-        x, y = self.current_mouse_position
-        self.move_mouse(x, y + 10)
-        
-    def click(self, x: float, y: float, options: dict = None) -> None:
+    async def click(self, x: float, y: float, options: dict = None) -> None:
         """
         Click at the specified coordinates with human-like movement.
         
@@ -220,10 +200,10 @@ class BrowserController:
             raise ValueError("Browser not started")
         
         # First move the mouse to the target position
-        self.move_mouse(x, y)
+        await self.move_mouse(x, y)
         
         # Add a small delay before clicking (like a human would)
-        time.sleep(0.1)
+        await asyncio.sleep(random.uniform(0.1, 0.3))
         
         # Apply click options
         # if options:
@@ -231,13 +211,13 @@ class BrowserController:
         # else:
         #     await self.page.mouse.click(x, y)
 
-        self.page.mouse.down()
-        time.sleep(0.05)
-        self.page.mouse.up()
+        await self.page.mouse.down()
+        await asyncio.sleep(0.05)
+        await self.page.mouse.up()
         
         logger.info(f"Clicked at ({x}, {y}) with options: {options}")
         
-    def drag(self, x: float, y: float) -> None:
+    async def drag(self, x: float, y: float) -> None:
         """
         Drag from current position to the specified coordinates.
         
@@ -252,69 +232,25 @@ class BrowserController:
         start_x, start_y = self.current_mouse_position
         
         # Press mouse button down at current position
-        self.page.mouse.down()
+        await self.page.mouse.down()
         
         # Generate a human-like path for the drag movement
         path = self._generate_human_like_path(start_x, start_y, x, y)
         
         # Move the mouse along the path
         for point_x, point_y in path:
-            self.page.mouse.move(point_x, point_y)
+            await self.page.mouse.move(point_x, point_y)
             # Add a small delay to simulate human movement speed
-            time.sleep(random.uniform(0.005, 0.01))
+            await asyncio.sleep(random.uniform(0.005, 0.01))
         
         # Release mouse button at target position
-        self.page.mouse.up()
+        await self.page.mouse.up()
         
         # Update current mouse position
         self.current_mouse_position = (x, y)
         logger.info(f"Dragged from ({start_x}, {start_y}) to ({x}, {y})")
         
-    def scroll_down(self, amount: int) -> None:
-        """
-        Scroll down by the specified amount.
-        
-        Args:
-            amount: The amount to scroll down in pixels
-        """
-        if not self.page:
-            raise ValueError("Browser not started")
-        
-        self.page.mouse.wheel(0, amount)
-        logger.info(f"Scrolled down {amount} pixels")
-        
-    def scroll_up(self, amount: int) -> None:
-        """
-        Scroll up by the specified amount.
-        
-        Args:
-            amount: The amount to scroll up in pixels
-        """
-        if not self.page:
-            raise ValueError("Browser not started")
-        
-        self.page.mouse.wheel(0, -amount)
-        logger.info(f"Scrolled up {amount} pixels")
-        
-    def type_text(self, text: str) -> None:
-        """
-        Type text with human-like timing.
-        
-        Args:
-            text: The text to type
-        """
-        if not self.page:
-            raise ValueError("Browser not started")
-        
-        # Type with human-like delays between keystrokes
-        for char in text:
-            self.page.keyboard.press(char)
-            # Add a random delay between keystrokes
-            time.sleep(random.uniform(0.05, 0.15))
-
-        logger.info(f"Typed: {text}")
-    
-    def press_key(self, key: str, 
+    async def press_key(self, key: str, 
                         lite_mode: bool = False, 
                         delay_ms: float = 100) -> None:
         """
@@ -335,18 +271,18 @@ class BrowserController:
             
             # Press down all modifier keys first
             for modifier in keys[:-1]:
-                self.page.keyboard.down(modifier)
+                await self.page.keyboard.down(modifier)
             
             # Press the final key
-            self.page.keyboard.press(keys[-1], delay=delay_ms)
+            await self.page.keyboard.press(keys[-1], delay=delay_ms)
             
             # Release all modifier keys in reverse order
             for modifier in reversed(keys[:-1]):
-                self.page.keyboard.up(modifier)
+                await self.page.keyboard.up(modifier)
         
         # Handle single key press
         else:
-            self.page.keyboard.press(key, delay=delay_ms)
+            await self.page.keyboard.press(key, delay=delay_ms)
         
         logger.info(f"Pressed key: {key}")
 
@@ -443,7 +379,7 @@ class BrowserController:
         
         return point
 
-    def execute_action(self, action: str, action_input: str) -> str:
+    async def execute_action(self, action: str, action_input: str) -> str:
         """Execute an action and return the observation."""
         try:
             logger.info(f"Executing action: {action} with input: {action_input}")
@@ -453,8 +389,8 @@ class BrowserController:
             screenshots = []
             if self.lite:
                 logger.info("Lite mode is enabled, pausing game with Alt+Pause key...")
-                self.press_key("Alt+Pause", delay_ms=0)
-                time.sleep(0.01)
+                await self.press_key("Alt+Pause", delay_ms=0)
+                await asyncio.sleep(0.01)
 
             if action == "nope":
                 logger.info("Agent decided to skip this step.")
@@ -479,39 +415,22 @@ class BrowserController:
                     click_options = None
                 
                 logger.info(f"Clicking at coordinates: ({x}, {y}) with options: {click_options}")
-                self.click(x, y, click_options)
+                await self.click(x, y, click_options)
                 result = f"Mouse clicked at ({x}, {y}) with options: {click_options}"
 
             elif action == "move":
                 x, y = map(float, action_input.split(","))
                 x_start, y_start = self.current_mouse_position
                 logger.info(f"Moving mouse from: ({x_start}, {y_start}) to: ({x}, {y})")
-                self.move_mouse(x, y)
+                await self.move_mouse(x, y)
                 result = f"Mouse moved to ({x}, {y})"
 
             elif action == "drag":
                 x, y = map(float, action_input.split(","))
                 x_start, y_start = self.current_mouse_position
                 logger.info(f"Dragging from: ({x_start}, {y_start}) to: ({x}, {y})")
-                self.drag(x, y)
+                await self.drag(x, y)
                 result = f"Mouse dragged to ({x}, {y})"
-
-            elif action == "scroll_down":
-                amount = int(action_input)
-                logger.info(f"Scrolling down: {amount}px")
-                self.scroll_down(amount)
-                result = f"Scrolled down {amount} pixels."
-
-            elif action == "scroll_up":
-                amount = int(action_input)
-                logger.info(f"Scrolling up: {amount}px")
-                self.scroll_up(amount)
-                result = f"Scrolled up {amount} pixels."
-
-            elif action == "write":
-                logger.info(f"Typing text: {action_input}")
-                self.type_text(action_input)
-                result = f"Typed: {action_input}"
 
             elif action == "press_key":
                 logger.info(f"Pressing key: {action_input}")
@@ -520,12 +439,12 @@ class BrowserController:
                     for key in keys:
                         self.press_key(key.strip(), lite_mode=self.lite, delay_ms=self.press_key_delay)
                         for _ in range(self.num_screenshots_per_action): 
-                            screenshot = self.get_screenshot()
+                            screenshot = await self.get_screenshot()
                             screenshots.append(screenshot)
-                            time.sleep(0.05) 
+                            await asyncio.sleep(0.05) 
                     result = f"Pressed keys: {action_input}"
                 else:
-                    self.press_key(action_input, lite_mode=self.lite, delay_ms=self.press_key_delay)
+                    await self.press_key(action_input, lite_mode=self.lite, delay_ms=self.press_key_delay)
                     result = f"Pressed key: {action_input}"
 
             elif action == "hold_key":
@@ -533,7 +452,7 @@ class BrowserController:
                 key = parts[0]
                 duration = float(parts[1]) if len(parts) > 1 else 0.5
                 logger.info(f"Holding key: {key} for {duration}s")
-                self.press_key(key, lite_mode=self.lite, delay_ms=duration)
+                await self.press_key(key, lite_mode=self.lite, delay_ms=duration)
                 result = f"Held key {key} for {duration} seconds"
 
             elif action == "done":
@@ -552,12 +471,12 @@ class BrowserController:
                 start_time = time.time()
                 # Take screenshots for approximately 0.3 seconds
                 for _ in range(5):  # 3 * 0.1s = 0.3s
-                    screenshot = self.get_screenshot()
+                    screenshot = await self.get_screenshot()
                     screenshots.append(screenshot)
-                    time.sleep(0.05) 
+                    await asyncio.sleep(0.05) 
 
                 # Pause game
-                self.press_key("Alt+Pause", delay_ms=0)
+                await self.press_key("Alt+Pause", delay_ms=0)
 
                 duration = time.time() - start_time
 
@@ -582,6 +501,6 @@ class BrowserController:
             logger.error(error_msg)
             
             if self.lite:
-                self.press_key("Alt+Pause", delay_ms=0)
+                await self.press_key("Alt+Pause", delay_ms=0)
             
             return error_msg, None
