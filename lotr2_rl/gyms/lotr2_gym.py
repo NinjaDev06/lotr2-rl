@@ -88,6 +88,7 @@ class LordsOfTheRealm2Gym(gym.Env):
         icon_path = "C:\\Users\\egoul\\Documents\\Projects\\lotr2-rl\\lotr2_rl\\gyms\\player_icon.png"
         logger.info('icon found: ', os.path.exists(icon_path))
         self.player_icon_img = cv2.imread(icon_path)
+        self.invalid_crown_texts = []
 
     def _get_obs(self):
         image_bytes = self.browser.get_screenshot()
@@ -133,12 +134,38 @@ class LordsOfTheRealm2Gym(gym.Env):
         logger.info("Text found:", text)
 
         crowns = None
-        # Check if the text contains "rown" because the "C" is readed as "D"
-        if "rown" in text:
-            text = text.replace("S", "5")
+        
+        # if "50432 Cropnsz" in text:
+        #     crowns = 5043  # Hack until I find a better way to read the crowns
+        # elif "51322 rowns." in text:
+        #     crowns = 5132  # Hack until I find a better way to read the crowns
+        # elif "55298 Crowns." in text:
+        #     crowns = 5529
+        if text != "":
             crowns = int(re.sub(r'\D', '', text))  # Remove non-digit characters
-        else:
-            logger.warning("No crowns found in the text.")
+
+            if crowns > 50_000:
+                crowns //= 10  # Adjust for cases where the number is read incorrectly
+
+            # Add protection against wrong reading
+            if crowns < 0 or abs(self.last_gold - crowns) > 5000:
+                crowns = None
+                logger.warning(f"Crowns not readable : '{text}'")
+                if text not in self.invalid_crown_texts:
+                    cv2.imwrite(self.log_dir / f"crowns_{len(self.invalid_crown_texts)}.png", crowns_image)  # Save for debugging
+                    self.invalid_crown_texts.append(text)
+
+        # Check if the text contains "rown" because the "C" is readed as "D"
+        # if "rown" in text or "crowrs" in text.lower():
+        #     text = text.replace("S", "5")
+        #     crowns = int(re.sub(r'\D', '', text))  # Remove non-digit characters
+        # elif text == "50432 Cropnsz.":
+        #     crowns = 5043 # Hack until I find a better way to read the crowns
+        # elif text != "":
+        #     logger.warning("Crowns not readable : " + text)
+        #     if text not in self.invalid_crown_texts:
+        #         cv2.imwrite(self.log_dir / f"crowns_{len(self.invalid_crown_texts)}.png", crowns_image)  # Save for debugging
+        #         self.invalid_crown_texts.append(text)
         return crowns
 
     def reset(
