@@ -88,7 +88,9 @@ class LordsOfTheRealm2Gym(gym.Env):
         icon_path = "C:\\Users\\egoul\\Documents\\Projects\\lotr2-rl\\lotr2_rl\\gyms\\player_icon.png"
         logger.info('icon found: ', os.path.exists(icon_path))
         self.player_icon_img = cv2.imread(icon_path)
+        
         self.invalid_crown_texts = []
+        self.end_of_turn_count = 0
 
     def _get_obs(self):
         image_bytes = self.browser.get_screenshot()
@@ -195,10 +197,16 @@ class LordsOfTheRealm2Gym(gym.Env):
 
         observation = self._get_obs()
         is_end_turn = self._is_end_turn_animation(observation)
-        while is_end_turn:
+        wait_count = 0
+        while is_end_turn and wait_count < 5:
             time.sleep(1)
+            wait_count += 1
             observation = self._get_obs()
             is_end_turn = self._is_end_turn_animation(observation)
+        if wait_count >= 5:
+            logger.warning("End of turn time out")
+            cv2.imwrite(self.log_dir / f"endofturn_{self.end_of_turn_count}.png", observation)  # Save for debugging
+            self.end_of_turn_count += 1
         info = self._get_info(observation)
 
         terminated = False # todo: get if game is winned or losted
