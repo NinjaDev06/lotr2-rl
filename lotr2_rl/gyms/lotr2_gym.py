@@ -1,5 +1,6 @@
 import os
 import math
+import sys
 import time
 import re
 import pytesseract
@@ -17,6 +18,7 @@ import gymnasium as gym
 from lotr2_rl.emulators.dos.website_server import DOSGameServer
 from lotr2_rl.emulators.dos.browser_controller import BrowserController
 from lotr2_rl.llm.realtime_agent import WebBrowsingAgent
+from lotr2_rl.utils import search_image, is_image_present
 
 # Configure logging
 logging.basicConfig(
@@ -24,6 +26,15 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+
+# Add stdout handler, with level INFO
+# console = logging.StreamHandler(sys.stdout)
+# console.setLevel(logging.INFO)
+# formatter = logging.Formatter('%(name)-13s: %(levelname)-8s %(message)s')
+# console.setFormatter(formatter)
+# logger = logging.getLogger()
+# logger.addHandler(console)
 
 _next_port = 9000
 def _get_next_port():
@@ -53,8 +64,8 @@ class LordsOfTheRealm2Gym(gym.Env):
 
         self.observation_space = gym.spaces.Box(0, 255, shape=(400, 534, 3), dtype=np.uint8)
 
-        self.x_min = 85
-        self.y_min = 20
+        self.x_min = 80
+        self.y_min = 15
         self.game_width = 600 - self.x_min
         self.game_height = 395 - self.y_min
         self.grid_size = grid_size
@@ -85,9 +96,17 @@ class LordsOfTheRealm2Gym(gym.Env):
             headless=(render_mode != "human")
         )
 
-        icon_path = "C:\\Users\\egoul\\Documents\\Projects\\lotr2-rl\\lotr2_rl\\gyms\\player_icon.png"
+        icon_path = "C:\\Users\\egoul\\Documents\\Projects\\lotr2-rl\\lotr2_rl\\gyms\\player_icon_gray.png"
         logger.info('icon found: ', os.path.exists(icon_path))
         self.player_icon_img = cv2.imread(icon_path)
+        
+        main_menu_path = "C:\\Users\\egoul\\Documents\\Projects\\lotr2-rl\\lotr2_rl\\gyms\\main_menu_gray.png"
+        logger.info('icon found: ', os.path.exists(main_menu_path))
+        self.main_menu_img = cv2.imread(main_menu_path)
+        
+        confirm_button_path = "C:\\Users\\egoul\\Documents\\Projects\\lotr2-rl\\lotr2_rl\\gyms\\confirm_button_gray.png"
+        logger.info('icon found: ', os.path.exists(confirm_button_path))
+        self.confirm_button_img = cv2.imread(confirm_button_path)
         
         self.invalid_crown_texts = []
         self.end_of_turn_count = 0
@@ -103,8 +122,12 @@ class LordsOfTheRealm2Gym(gym.Env):
 
         # Decode image from array
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
+        
+        # Crop the image to the game area
         cropped_img = img[:-75, 76:-90] 
+        # Convert from BGR to Grayscale
+        # cropped_gray_img = cv2.cvtColor(cropped_img, cv2.COLOR_BGR2GRAY)
+        # cropped_gray_img = cv2.cvtColor(cropped_img, cv2.COLOR_)
 
         cv2.imwrite(self.log_dir / f"obs_{self.server.port}.png", cropped_img)  # Save for debugging
         return cropped_img
@@ -197,12 +220,14 @@ class LordsOfTheRealm2Gym(gym.Env):
 
         observation = self._get_obs()
         is_end_turn = self._is_end_turn_animation(observation)
+        # s_full_screen_menu = self._is_full_screen_menu(observation)
         wait_count = 0
         while is_end_turn and wait_count < 5:
             time.sleep(1)
             wait_count += 1
             observation = self._get_obs()
             is_end_turn = self._is_end_turn_animation(observation)
+            # s_full_screen_menu = self._is_full_screen_menu(observation)
         if wait_count >= 5:
             logger.warning("End of turn time out")
             cv2.imwrite(self.log_dir / f"endofturn_{self.end_of_turn_count}.png", observation)  # Save for debugging
@@ -220,17 +245,27 @@ class LordsOfTheRealm2Gym(gym.Env):
         return observation, reward, terminated, truncated, info
 
     def _is_end_turn_animation(self, observation) -> bool:
-        result = cv2.matchTemplate(observation, self.player_icon_img, cv2.TM_CCOEFF_NORMED)
-
-        # Set a threshold: 0.8+ is usually a strong match
-        threshold = 0.8
-        locations = np.where(result >= threshold)
-
-        # Check if any match was found
-        if len(list(zip(*locations[::-1]))) > 0:
+        if not is_image_present(observation, self.main_menu_img):
             return False
-        else:
-            return True
+        if is_image_present(observation, self.player_icon_img):
+            return False
+        return True
+            
+        # result = cv2.matchTemplate(observation, self.player_icon_img, cv2.TM_CCOEFF_NORMED)
+
+        # # Set a threshold: 0.8+ is usually a strong match
+        # threshold = 0.8
+        # locations = np.where(result >= threshold)
+
+        # # Check if any match was found
+        # if len(list(zip(*locations[::-1]))) > 0:
+        #     return False
+        # else:
+        #     return True
+
+    def _is_full_screen_menu(self, observation) -> bool:
+        locations = search_image(observation, self.confirm_button_img)
+        return any([loc for loc in locations if loc.x == 521 and loc.y == 386])
 
     def _play(self, action: int):
         # logger.info(f'Play action {action}')
@@ -252,14 +287,14 @@ class LordsOfTheRealm2Gym(gym.Env):
             # logger.debug(f'Play mouse action {mouse_action}')
             x = (mouse_action % self.mouse_action_space) % self.grid_width + 1
             y = (mouse_action % self.mouse_action_space) // self.grid_width + 1
-            # logger.debug(f'grid ({x}, {y})')
+            # print(f'grid ({x}, {y})')
 
             self.current_x = x
             self.current_y = y
 
             x_pixel = self.grid_to_pixel(x)
             y_pixel = self.grid_to_pixel(y)
-            # logger.debug(f'pixel ({x_pixel}, {y_pixel})')
+            # print(f'pixel ({x_pixel}, {y_pixel})')
 
             if self._is_in_excluded_area(x_pixel, y_pixel):
                 logger.info(f"Prevent moving inside excluded area: {x_pixel}, {y_pixel}")
@@ -268,8 +303,11 @@ class LordsOfTheRealm2Gym(gym.Env):
             self.current_x_pixel = x_pixel
             self.current_y_pixel = y_pixel
 
+            x_pixel += self.x_min
+            y_pixel += self.y_min
+
             logger.info(f'mouse_move {mouse_action} : move at grid=({x}, {y}), pixel=({x_pixel}, {y_pixel})')
-            self.browser.execute_action("move", f"{self.x_min + x_pixel},{self.y_min + y_pixel}")
+            self.browser.execute_action("move", f"{x_pixel},{y_pixel}")
             # time.sleep(self.sleep_second)
 
             # When they is no drag, directly perform a click after moving the mouse
