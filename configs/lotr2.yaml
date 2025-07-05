@@ -1,5 +1,5 @@
 lotr2-rl/LordsOfTheRealm2-v0:
-    frame_stack: 4
+    frame_stack: 10
     policy: 'CnnPolicy'
     n_envs: 1
     n_steps: 128
