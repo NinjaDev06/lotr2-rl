@@ -1,0 +1,16 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "Python Debugger: Module",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "rl_zoo3.train",
+            "args": "--algo ppo --env lotr2-rl/LordsOfTheRealm2-v0 --conf configs/lotr2.yaml --gym-packages lotr2_rl -n 100"
+        }
+    ]
+}
