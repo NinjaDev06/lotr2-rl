@@ -42,12 +42,16 @@ def _test_lotr2_gym(args):
             return int(action) if action.isdigit() else 0
         action_func = manual_actions
 
+    iteration = 0
     while not done:
+        iteration += 1
         action = action_func()
         observation, reward, terminated, truncated, info = env.step(action)
-        print(f"Action: {action}, Reward: {reward}, Info: {info}")
+        print(f"[{iteration}] Action: {action}, Reward: {reward}, Info: {info}")
 
         done = terminated or truncated
+        if done:
+            print("Run finished.")
 
     env.close()
 

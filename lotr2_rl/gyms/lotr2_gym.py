@@ -193,6 +193,12 @@ class LordsOfTheRealm2Gym(gym.Env):
         #         self.invalid_crown_texts.append(text)
         return crowns
 
+    def close(self):
+        """After the user has finished using the environment, close contains the code necessary to "clean up" the environment.
+        """
+        if self.browser.is_running:
+            self.browser.close()
+
     def reset(
         self, *, seed: int | None = None, options: dict[str, Any] | None = None
     ):
