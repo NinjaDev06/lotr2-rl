@@ -10,6 +10,8 @@ import platform
 
 from playwright.async_api import async_playwright
 
+from lotr2_rl.async_utils import run_async
+
 # Configure logging
 logging.basicConfig(
     level=logging.WARNING,
@@ -78,7 +80,7 @@ class DOSGameServer:
             
         # Close browser if open
         if self.browser:
-            asyncio.create_task(self._close_browser())
+            self._close_browser()
         
         # Stop server    
         self.server.shutdown()
@@ -86,58 +88,16 @@ class DOSGameServer:
         self.is_running = False
         logger.info("Server stopped")
     
-    async def open_in_chromium(self, headless: bool = False) -> None:
-        """
-        Open the server page in Chromium using Playwright.
-        
-        Args:
-            headless: Whether to run the browser in headless mode
-        """
-        if not self.is_running:
-            logger.error("Server is not running, cannot open browser")
-            return
-        
-        logger.info("Opening server in Chromium browser...")
-        self.playwright = await async_playwright().start()
-        
-        # Launch browser without viewport parameter
-        self.browser = await self.playwright.chromium.launch(headless=headless, args=["--disable-web-security"])
-        
-        # Create context with dimensions based on OS
-        # Measured in viewport pixels
-        viewport_dimensions = {"width": 640, "height": 400} if platform.system() == "Darwin" else {"width": 700, "height": 475}
-        
-        self.context = await self.browser.new_context(
-            viewport=viewport_dimensions,
-            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
-        )
-        self.page = await self.context.new_page()
-        
-        # Navigate to the server
-        await self.page.goto(f"http://localhost:{self.port}")
-        
-        # Adjust the window size precisely to fit the game
-        await self.page.evaluate("""
-        () => {
-            // Make sure the page contains only the game with minimal margins
-            document.body.style.margin = '0';
-            document.body.style.padding = '0';
-            document.body.style.overflow = 'hidden';
-        }
-        """)
-        
-        logger.info("Browser opened successfully")
-    
-    async def _close_browser(self) -> None:
+    def _close_browser(self) -> None:
         """
         Close the browser if it's open.
         """
         if self.browser:
-            await self.browser.close()
+            run_async(self.browser.close())
             self.browser = None
         
         if self.playwright:
-            await self.playwright.stop()
+            run_async(self.playwright.stop())
             self.playwright = None
         
         logger.info("Browser closed successfully")

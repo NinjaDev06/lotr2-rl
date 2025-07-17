@@ -9,7 +9,8 @@ import time
 from typing import List, Optional, Tuple, Union
 import platform
 
-from playwright.sync_api import sync_playwright, Browser, BrowserContext, Page
+from playwright.async_api import async_playwright, Browser, BrowserContext, Page
+from lotr2_rl.async_utils import run_async
 
 # Configure logging
 logging.basicConfig(
@@ -97,20 +98,21 @@ class BrowserController:
             logger.warning(f"Warning: No preload configuration found at {config_path}")
         except Exception as e:
             logger.error(f"Error executing preload actions: {e}")
+            logger.exception(e)
 
     def start(self) -> None:
         """
         Start the browser.
         """
-        self.playwright = sync_playwright().start()
-        self.browser = self.playwright.chromium.launch(headless=self.headless, args=["--disable-web-security"])
+        self.playwright = run_async(async_playwright().start())
+        self.browser = run_async(self.playwright.chromium.launch(headless=self.headless, args=["--disable-web-security"]))
 
         self.viewport_dimensions = {"width": 640, "height": 400} if platform.system() == "Darwin" else {"width": 700, "height": 475}
-        self.context = self.browser.new_context(
+        self.context = run_async(self.browser.new_context(
             viewport=self.viewport_dimensions,
             user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
-        )
-        self.page = self.context.new_page()
+        ))
+        self.page = run_async(self.context.new_page())
         
         # Set initial mouse position
         self.current_mouse_position = (0, 0)
@@ -122,9 +124,9 @@ class BrowserController:
         Close the browser.
         """
         if self.browser:
-            self.browser.close()
+            run_async(self.browser.close())
         if self.playwright:
-            self.playwright.stop()
+            run_async(self.playwright.stop())
         logger.info("Browser closed successfully")
         
     def navigate(self, url: str) -> None:
@@ -137,7 +139,7 @@ class BrowserController:
         if not self.page:
             raise ValueError("Browser not started")
         
-        self.page.goto(url)
+        run_async(self.page.goto(url))
         logger.info(f"Navigated to {url}")
         
     def get_screenshot(self) -> bytes:
@@ -151,7 +153,7 @@ class BrowserController:
             raise ValueError("Browser not started")
         
         # Capture screenshot in JPEG format
-        screenshot = self.page.screenshot(type="jpeg", quality=100)
+        screenshot = run_async(self.page.screenshot(type="jpeg", quality=100))
         logger.info("Screenshot captured")
         return screenshot
         
@@ -177,7 +179,7 @@ class BrowserController:
         
         # Move the mouse along the path
         for point_x, point_y in path:
-            self.page.mouse.move(point_x, point_y)
+            run_async(self.page.mouse.move(point_x, point_y))
             # Add a small delay to simulate human movement speed
             time.sleep(0.001)
         
@@ -231,9 +233,9 @@ class BrowserController:
         # else:
         #     await self.page.mouse.click(x, y)
 
-        self.page.mouse.down()
+        run_async(self.page.mouse.down())
         time.sleep(0.05)
-        self.page.mouse.up()
+        run_async(self.page.mouse.up())
         
         logger.info(f"Clicked at ({x}, {y}) with options: {options}")
         
@@ -252,19 +254,19 @@ class BrowserController:
         start_x, start_y = self.current_mouse_position
         
         # Press mouse button down at current position
-        self.page.mouse.down()
+        run_async(self.page.mouse.down())
         
         # Generate a human-like path for the drag movement
         path = self._generate_human_like_path(start_x, start_y, x, y)
         
         # Move the mouse along the path
         for point_x, point_y in path:
-            self.page.mouse.move(point_x, point_y)
+            run_async(self.page.mouse.move(point_x, point_y))
             # Add a small delay to simulate human movement speed
-            time.sleep(random.uniform(0.005, 0.01))
+            time.sleep(0.005)
         
         # Release mouse button at target position
-        self.page.mouse.up()
+        run_async(self.page.mouse.up())
         
         # Update current mouse position
         self.current_mouse_position = (x, y)
@@ -280,7 +282,7 @@ class BrowserController:
         if not self.page:
             raise ValueError("Browser not started")
         
-        self.page.mouse.wheel(0, amount)
+        run_async(self.page.mouse.wheel(0, amount))
         logger.info(f"Scrolled down {amount} pixels")
         
     def scroll_up(self, amount: int) -> None:
@@ -293,7 +295,7 @@ class BrowserController:
         if not self.page:
             raise ValueError("Browser not started")
         
-        self.page.mouse.wheel(0, -amount)
+        run_async(self.page.mouse.wheel(0, -amount))
         logger.info(f"Scrolled up {amount} pixels")
         
     def type_text(self, text: str) -> None:
@@ -308,7 +310,7 @@ class BrowserController:
         
         # Type with human-like delays between keystrokes
         for char in text:
-            self.page.keyboard.press(char)
+            run_async(self.page.keyboard.press(char))
             # Add a random delay between keystrokes
             time.sleep(random.uniform(0.05, 0.15))
 
@@ -335,18 +337,18 @@ class BrowserController:
             
             # Press down all modifier keys first
             for modifier in keys[:-1]:
-                self.page.keyboard.down(modifier)
+                run_async(self.page.keyboard.down(modifier))
             
             # Press the final key
-            self.page.keyboard.press(keys[-1], delay=delay_ms)
+            run_async(self.page.keyboard.press(keys[-1], delay=delay_ms))
             
             # Release all modifier keys in reverse order
             for modifier in reversed(keys[:-1]):
-                self.page.keyboard.up(modifier)
+                run_async(self.page.keyboard.up(modifier))
         
         # Handle single key press
         else:
-            self.page.keyboard.press(key, delay=delay_ms)
+            run_async(self.page.keyboard.press(key, delay=delay_ms))
         
         logger.info(f"Pressed key: {key}")
 
